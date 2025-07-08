@@ -2,6 +2,7 @@
 
 - Enable EC11 rotary encoder.
 - Turn clockwise to increase volume and turn anti-clockwise to decrease volume.
+# Changes to original firmware
 - Press top right key pushbutton to play/pause media.
 - Replaced KC_HOME with KC_PSCR
 - Replaced KC_KP_DOT to KC_DOT
