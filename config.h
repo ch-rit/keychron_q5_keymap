@@ -18,3 +18,7 @@
 
 /* Enable caps-lock LED */
 #define CAPS_LOCK_LED_INDEX 51
+#define RGB_MATRIX_DEFAULT_MODE RGB_MATRIX_SOLID_COLOR
+#define RGB_MATRIX_DEFAULT_HUE 170    // 0-255
+#define RGB_MATRIX_DEFAULT_SAT 255     // 0-1001  
+#define RGB_MATRIX_DEFAULT_VAL 128    // 0-255 (brightness)

@@ -23,6 +23,14 @@ static const uint8_t NUMPAD_LEDS[] = {
     31, 32, 33, 34, 48, 49, 50, 65, 66, 67, 68, 83, 84, 85, 96, 97, 98
 };
 
+static const uint8_t LETTER_LEDS[] = {
+    36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46,  // Q W E R T Y U I O P Ü
+    52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62,     // A S D F G H J K L Ö Ä
+    71, 72, 73, 74, 75, 76, 77               // Z X C V B N M
+};
+
+#define LETTER_LED_COUNT (sizeof(LETTER_LEDS) / sizeof(LETTER_LEDS[0]))
+
 #define NUMPAD_LED_COUNT (sizeof(NUMPAD_LEDS) / sizeof(NUMPAD_LEDS[0]))
 
 enum layers{
@@ -78,15 +86,26 @@ void set_numpad_color(uint8_t red, uint8_t green, uint8_t blue) {
     }
 }
 
+void set_letter_color(uint8_t red, uint8_t green, uint8_t blue) {
+    for (uint8_t i = 0; i < LETTER_LED_COUNT; i++) {
+        rgb_matrix_set_color(LETTER_LEDS[i], red, green, blue);
+    }
+}
+
 bool led_update_user(led_t led_state) {
     return true;
 }
 
 bool rgb_matrix_indicators_user(void) {
     if (rgb_matrix_is_enabled()) {
+        // Your existing numpad logic
         if (!host_keyboard_led_state().num_lock) {
             set_numpad_color(RGB_GREEN);
         }
+        
+        // Add letter key coloring for WIN_BASE layer
+            set_letter_color(RGB_RED); // Red
     }
     return false;
 }
+
