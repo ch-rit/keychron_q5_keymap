@@ -29,6 +29,8 @@ static const uint8_t LETTER_LEDS[] = {
     71, 72, 73, 74, 75, 76, 77               // Z X C V B N M
 };
 
+static bool numlock_on = true; // Default to on
+
 #define LETTER_LED_COUNT (sizeof(LETTER_LEDS) / sizeof(LETTER_LEDS[0]))
 
 #define NUMPAD_LED_COUNT (sizeof(NUMPAD_LEDS) / sizeof(NUMPAD_LEDS[0]))
@@ -56,7 +58,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         _______,  _______,  _______,  _______,  _______,  _______,  _______,  NK_TOGG,  _______,  _______,  _______,  _______,              _______,  _______,  _______,  _______,  _______,
         _______,  _______,  _______,                                _______,                                _______,  _______,    _______,  _______,  _______,  _______,  _______,  _______,  _______),
     [WIN_BASE] = LAYOUT_iso_99(
-        KC_ESC,             KC_F1,    KC_F2,    KC_F3,    KC_F4,    KC_F5,    KC_F6,    KC_F7,    KC_F8,    KC_F9,    KC_F10,     KC_F11,   KC_F12,             KC_DEL,   KC_PSCR,  KC_END,   KC_MPLY,
+        KC_ESC,             KC_F1,    KC_F2,    KC_F3,    KC_F4,    KC_F5,    KC_F6,    KC_F7,    KC_F8,    KC_F9,    KC_F10,     KC_F11,   KC_F12,             KC_DEL,   KC_PSCR,  KC_F20,   KC_MPLY,
         KC_GRV,   KC_1,     KC_2,     KC_3,     KC_4,     KC_5,     KC_6,     KC_7,     KC_8,     KC_9,     KC_0,     KC_MINS,    KC_EQL,   KC_BSPC,            KC_NUM,   KC_PSLS,  KC_PAST,  KC_PMNS,
         KC_TAB,   KC_Q,     KC_W,     KC_E,     KC_R,     KC_T,     KC_Y,     KC_U,     KC_I,     KC_O,     KC_P,     KC_LBRC,    KC_RBRC,                      KC_P7,    KC_P8,    KC_P9,
         KC_ESC,  KC_A,     KC_S,     KC_D,     KC_F,     KC_G,     KC_H,     KC_J,     KC_K,     KC_L,     KC_SCLN,  KC_QUOT,    KC_NUHS,  KC_ENT,             KC_P4,    KC_P5,    KC_P6,    KC_PPLS,
@@ -80,6 +82,14 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 };
 #endif
 
+void keyboard_post_init_user(void) {
+    // Force numlock on at startup
+    if (!host_keyboard_led_state().num_lock) {
+        tap_code(KC_NUM_LOCK);
+    }
+    numlock_on = true;
+}
+
 void set_numpad_color(uint8_t red, uint8_t green, uint8_t blue) {
     for (uint8_t i = 0; i < NUMPAD_LED_COUNT; i++) {
         rgb_matrix_set_color(NUMPAD_LEDS[i], red, green, blue);
@@ -93,6 +103,7 @@ void set_letter_color(uint8_t red, uint8_t green, uint8_t blue) {
 }
 
 bool led_update_user(led_t led_state) {
+    numlock_on = led_state.num_lock;
     return true;
 }
 
@@ -102,12 +113,10 @@ bool rgb_matrix_indicators_user(void) {
             rgb_matrix_set_color_all(0, 0, 0);
             return false; // Don't process anything else
         }
-        
-        // Your existing numpad logic
         if (!host_keyboard_led_state().num_lock) {
             set_numpad_color(RGB_GREEN);
         }
-        
+
         // Add letter key coloring for WIN_BASE layer
             set_letter_color(RGB_RED); // Red
     }
