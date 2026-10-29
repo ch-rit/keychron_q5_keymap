@@ -15,6 +15,7 @@
  */
 
 #include QMK_KEYBOARD_H
+#include "usb_device_state.h"
 
 // clang-format off
 
@@ -28,8 +29,6 @@ static const uint8_t LETTER_LEDS[] = {
     52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62,     // A S D F G H J K L Ö Ä
     71, 72, 73, 74, 75, 76, 77               // Z X C V B N M
 };
-
-static bool numlock_on = true; // Default to on
 
 #define LETTER_LED_COUNT (sizeof(LETTER_LEDS) / sizeof(LETTER_LEDS[0]))
 
@@ -82,12 +81,32 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 };
 #endif
 
-void keyboard_post_init_user(void) {
-    // Force numlock on at startup
-    if (!host_keyboard_led_state().num_lock) {
-        tap_code(KC_NUM_LOCK);
+// Force numlock on once the host is connected. The host only reports its LED
+// state after USB enumeration, so checking at boot would always read "off" and
+// could toggle an already-on numlock off. Wait until we've been configured for a
+// moment, then check once per connection.
+void housekeeping_task_user(void) {
+    static uint32_t configured_since = 0;
+    static bool     numlock_checked  = false;
+
+    if (usb_device_state_get_configure_state() != USB_DEVICE_STATE_CONFIGURED) {
+        configured_since = 0;
+        numlock_checked  = false;
+        return;
     }
-    numlock_on = true;
+    if (numlock_checked) {
+        return;
+    }
+    if (configured_since == 0) {
+        configured_since = timer_read32() | 1;
+        return;
+    }
+    if (timer_elapsed32(configured_since) > 1000) {
+        if (!host_keyboard_led_state().num_lock) {
+            tap_code(KC_NUM_LOCK);
+        }
+        numlock_checked = true;
+    }
 }
 
 void set_numpad_color(uint8_t red, uint8_t green, uint8_t blue) {
@@ -100,11 +119,6 @@ void set_letter_color(uint8_t red, uint8_t green, uint8_t blue) {
     for (uint8_t i = 0; i < LETTER_LED_COUNT; i++) {
         rgb_matrix_set_color(LETTER_LEDS[i], red, green, blue);
     }
-}
-
-bool led_update_user(led_t led_state) {
-    numlock_on = led_state.num_lock;
-    return true;
 }
 
 bool rgb_matrix_indicators_user(void) {
