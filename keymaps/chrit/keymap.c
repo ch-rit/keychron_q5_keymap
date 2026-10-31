@@ -85,11 +85,19 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 // state after USB enumeration, so checking at boot would always read "off" and
 // could toggle an already-on numlock off. Wait until we've been configured for a
 // moment, then check once per connection.
+// Suspend/resume is not a new connection: the host turns the LEDs off while
+// suspended and restores them on its own after wake, so checking then would read
+// a stale "off" and toggle numlock off.
 void housekeeping_task_user(void) {
     static uint32_t configured_since = 0;
     static bool     numlock_checked  = false;
 
-    if (usb_device_state_get_configure_state() != USB_DEVICE_STATE_CONFIGURED) {
+    usb_configure_state_t state = usb_device_state_get_configure_state();
+    if (state == USB_DEVICE_STATE_SUSPEND) {
+        configured_since = 0;
+        return;
+    }
+    if (state != USB_DEVICE_STATE_CONFIGURED) {
         configured_since = 0;
         numlock_checked  = false;
         return;
